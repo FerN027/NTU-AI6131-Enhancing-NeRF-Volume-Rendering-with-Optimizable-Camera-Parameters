@@ -1,1 +1,1 @@
-# NTU-AI6131-Enhancing-NeRF-Volume-Rendering-with-Optimizable-Camera-Parameters
+# Enhancing NeRF's Volume Rendering Quality with Optimizable Camera Parameters
