@@ -1,6 +1,6 @@
-expname = blender_paper_lego
+expname = lego_tunable
 basedir = ./logs
-datadir = ./data/nerf_synthetic/lego
+datadir = ./data/nerf_synthetic/lego_corrupted_camera
 dataset_type = blender
 
 no_batching = True
@@ -21,5 +21,6 @@ half_res = True
 
 
 
-N_iters = 100
-i_testset = 100
+N_iters = 10000
+i_testset = 10000
+i_video = 10000
