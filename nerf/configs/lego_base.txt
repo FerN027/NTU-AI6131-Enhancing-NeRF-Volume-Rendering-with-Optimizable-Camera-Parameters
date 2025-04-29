@@ -21,6 +21,6 @@ half_res = True
 
 
 
-N_iters = 10000
-i_testset = 10000
-i_video = 10000
+N_iters = 20000
+i_testset = 20000
+i_video = 20000
