@@ -831,10 +831,10 @@ def train():
             print('Saved test set')
 
         if i%args.i_print==0:
-            # Compute test PSNR on the 2nd, 5th, 8th images
+            # Compute PSNR on the first 3 test images
             test_psnr_vals = []
             with torch.no_grad():
-                for idx in [1, 4, 7]:
+                for idx in range(min(3, len(i_test))):
                     img_idx = i_test[idx]
                     test_target = images[img_idx]
                     test_target = torch.Tensor(test_target).to(device)
