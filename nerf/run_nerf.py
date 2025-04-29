@@ -702,6 +702,10 @@ def train():
 
 
     N_iters = args.N_iters + 1
+
+    test_psnrs = []
+    test_iterations = []
+
     print('Begin')
     print('TRAIN views are', i_train)
     print('TEST views are', i_test)
@@ -826,10 +830,33 @@ def train():
                 render_path(torch.Tensor(poses[i_test]).to(device), hwf, K, args.chunk, render_kwargs_test, gt_imgs=images[i_test], savedir=testsavedir)
             print('Saved test set')
 
-
-    
         if i%args.i_print==0:
-            tqdm.write(f"[TRAIN] Iter: {i} Loss: {loss.item()}  PSNR: {psnr.item()}")
+            # Compute test PSNR on the 2nd, 5th, 8th images
+            test_psnr_vals = []
+            with torch.no_grad():
+                for idx in [1, 4, 7]:
+                    img_idx = i_test[idx]
+                    test_target = images[img_idx]
+                    test_target = torch.Tensor(test_target).to(device)
+                    test_pose = poses[img_idx, :3, :4]
+                    
+                    # Render test view
+                    rgb, disp, acc, _ = render(H, W, K, chunk=args.chunk, 
+                                            c2w=torch.Tensor(test_pose).to(device),
+                                            verbose=False, **render_kwargs_test)
+                    
+                    # Calculate test PSNR using same method as training
+                    test_img_loss = img2mse(rgb, test_target)
+                    test_psnr_val = mse2psnr(test_img_loss).item()
+                    test_psnr_vals.append(test_psnr_val)
+            
+            # Average test PSNR across the 5 images
+            avg_test_psnr = np.mean(test_psnr_vals)
+            test_psnrs.append(avg_test_psnr)
+            test_iterations.append(i)
+
+            tqdm.write(f"[TRAIN] Iter: {i} Loss: {loss.item()}  PSNR: {psnr.item()}  Test PSNR: {avg_test_psnr}")
+
         """
             print(expname, i, psnr.numpy(), loss.numpy(), global_step.numpy())
             print('iter time {:.05f}'.format(dt))
@@ -874,6 +901,23 @@ def train():
 
         global_step += 1
 
+    # Create and save plot after training finishes
+    if len(test_iterations) > 0:
+        plt.figure(figsize=(10, 5))
+        plt.plot(test_iterations, test_psnrs, 'r-o', label='Test PSNR (avg first 5 images)')
+        plt.xlabel('Iteration')
+        plt.ylabel('PSNR (dB)')
+        plt.title('Test PSNR over Training')
+        plt.legend()
+        plt.grid(True)
+        plt.savefig(os.path.join(basedir, expname, 'test_psnr_curve.png'), dpi=300)
+        
+        # Save numerical data for further analysis
+        np.savez(os.path.join(basedir, expname, 'test_psnr_data.npz'),
+                iterations=np.array(test_iterations),
+                test_psnrs=np.array(test_psnrs))
+        
+        print(f"Test PSNR plot saved to {os.path.join(basedir, expname, 'test_psnr_curve.png')}")
 
 if __name__=='__main__':
     torch.set_default_tensor_type('torch.cuda.FloatTensor')
