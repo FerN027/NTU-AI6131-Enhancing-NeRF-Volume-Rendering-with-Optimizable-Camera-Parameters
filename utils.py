@@ -163,26 +163,43 @@ def _rotation_matrix_z(theta):
 
 
 def plot_tri_psnr(
-		base='nerf/logs/lego_base/test_psnr_data.npz',
-		poor='nerf/logs/lego_bad/test_psnr_data.npz',
-		tunable='nerf/logs/lego_tunable/test_psnr_data.npz',
-		output='final_plot.png'
+        base='nerf/logs/lego_base/test_psnr_data.npz',
+        tunable='nerf/logs/lego_bad/test_psnr_data.npz',
+        poor='nerf/logs/lego_tunable/test_psnr_data.npz',
+        output='final_plot.png'
 ):
-	iterations = np.load(base)['iterations']
-	
-	psnr_base = np.load(base)['test_psnrs']
-	# psnr_poor = np.load(poor)['test_psnrs']
-	# psnr_tunable = np.load(tunable)['test_psnrs']
-	
-	# only show  base plot first
-	plt.figure(figsize=(10, 6))
-	plt.plot(iterations, psnr_base, label='Base', color='blue')
-	# plt.plot(iterations, psnr_poor, label='Poor', color='red')
-	# plt.plot(iterations, psnr_tunable, label='Tunable', color='green')
-	
-	plt.xlabel('Iteration')
-	plt.ylabel('PSNR (dB)')
-	plt.title('Test PSNR over Training')
-	plt.legend()
-	plt.grid(True)
-	plt.savefig(output)
+    iterations = np.load(base)['iterations']
+    
+    psnr_base = np.load(base)['test_psnrs']
+    psnr_poor = np.load(poor)['test_psnrs']
+    psnr_tunable = np.load(tunable)['test_psnrs']
+    
+    # Create the plot with all three curves
+    plt.figure(figsize=(10, 6))
+    plt.plot(iterations, psnr_base, label='GT Camera', color='blue', marker='o', markevery=5)
+    plt.plot(iterations, psnr_poor, label='Estimated Camera + Noise (Fixed)', color='red', marker='s', markevery=5)
+    plt.plot(iterations, psnr_tunable, label='Estimated Camera + Noise (Optimizable)', color='green', marker='^', markevery=5)
+    
+    plt.xlabel('Training Iteration', fontsize=12)
+    plt.ylabel('PSNR (dB)', fontsize=12)
+    plt.title('Average Rendering Quality for 5 Selected Test Images During Training', fontsize=14)
+    plt.legend(loc='best', fontsize=11)
+    plt.grid(True, alpha=0.3)
+    
+    # Optional: Add improvement regions/annotations
+    max_poor = np.max(psnr_poor)
+    max_tunable = np.max(psnr_tunable)
+    improvement = max_tunable - max_poor
+    plt.annotate(f"Improvement: +{improvement:.2f} dB", 
+                xy=(iterations[-1], max_tunable), 
+                xytext=(iterations[-1]*0.8, max_tunable+0.5),
+                arrowprops=dict(facecolor='black', shrink=0.05, width=1.5))
+    
+    # Save with high DPI for better quality
+    plt.tight_layout()
+    plt.savefig(output, dpi=300)
+    plt.close()
+    
+    print(f"Combined PSNR plot saved to {output}")
+    print(f"Max PSNR - Base: {np.max(psnr_base):.2f}, Poor: {max_poor:.2f}, Tunable: {max_tunable:.2f}")
+    print(f"Improvement from Poor to Tunable: +{improvement:.2f} dB")
