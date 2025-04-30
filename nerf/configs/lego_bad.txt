@@ -1,6 +1,6 @@
 expname = lego_bad
 basedir = ./logs
-datadir = ./data/nerf_synthetic/lego_corrupted_camera
+datadir = ./data/nerf_synthetic/lego_worst_camera
 dataset_type = blender
 
 no_batching = True
@@ -21,6 +21,6 @@ half_res = True
 
 
 
-N_iters = 10000
-i_testset = 10000
-i_video = 10000
+N_iters = 20000
+i_testset = 20000
+i_video = 20000
